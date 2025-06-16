@@ -52,7 +52,7 @@ module "ec2_instance" {
   name           = "workstation-eksctl"
   ami            = data.aws_ami.centos8.id
   instance_type  = "t2.micro"
-  key_name       = "user1"  # 🔴 Uncomment and ensure this key pair exists
+#   key_name       = "user1"  # 🔴 Uncomment and ensure this key pair exists
   subnet_id      = "subnet-089f37245d3204e86"  # 🔴 Replace with valid subnet ID in your region
   vpc_security_group_ids = [aws_security_group.allow_eksctl.id]
 
