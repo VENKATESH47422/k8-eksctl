@@ -38,13 +38,13 @@ resource "aws_security_group" "allow_eksctl" {
   }
 }
 
-data "aws_ami" "centos8"{
+data "aws_ami" "rhel9"{
     owners = ["973714476881"]
     most_recent      = true
 
     filter {
         name   = "name"
-        values = ["Centos-8-DevOps-Practice"]
+        values = ["RHEL-9-DevOps-Practice"]
     }
 
     filter {
