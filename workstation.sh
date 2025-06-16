@@ -8,15 +8,13 @@ N="\e[0m"
 ARCH=amd64
 PLATFORM=$(uname -s)_$ARCH
 
-
 TIMESTAMP=$(date +%F-%H-%M-%S)
 LOGFILE="/tmp/$0-$TIMESTAMP.log"
 
-echo "script stareted executing at $TIMESTAMP" &>> $LOGFILE
+echo "Script started executing at $TIMESTAMP" &>> "$LOGFILE"
 
-VALIDATE(){
-    if [ $1 -ne 0 ]
-    then
+VALIDATE() {
+    if [ $1 -ne 0 ]; then
         echo -e "$2 ... $R FAILED $N"
         exit 1
     else
@@ -24,50 +22,55 @@ VALIDATE(){
     fi
 }
 
-if [ $ID -ne 0 ]
-then
+if [ $ID -ne 0 ]; then
     echo -e "$R ERROR:: Please run this script with root access $N"
-    exit 1 # you can give other than 0
+    exit 1
 else
-    echo "You are root user"
-fi # fi means reverse of if, indicating condition end
+    echo -e "$G You are running the script as root user $N"
+fi
 
-yum install -y yum-utils
+yum install -y yum-utils &>> "$LOGFILE"
+VALIDATE $? "Installed yum-utils"
 
-VALIDATE $? "Installed yum utils"
+yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo &>> "$LOGFILE"
+VALIDATE $? "Added Docker repo"
 
-yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+yum install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin &>> "$LOGFILE"
+VALIDATE $? "Installed Docker components"
 
-VALIDATE $? "Added docker repo"
+systemctl start docker &>> "$LOGFILE"
+VALIDATE $? "Started Docker service"
 
-yum install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
+systemctl enable docker &>> "$LOGFILE"
+VALIDATE $? "Enabled Docker service"
 
-VALIDATE $? "Installed docker components"
+# Use the SUDO_USER if run via sudo, otherwise default to 'centos'
+USER_TO_ADD=${SUDO_USER:-centos}
+usermod -aG docker "$USER_TO_ADD" &>> "$LOGFILE"
+VALIDATE $? "Added user '$USER_TO_ADD' to docker group"
 
-systemctl start docker
+echo -e "$Y Logout and login again to use Docker as non-root user $N"
 
-VALIDATE $? "Started docker"
+# Install kubectl
+curl -LO "https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" &>> "$LOGFILE"
+VALIDATE $? "Downloaded kubectl"
 
-systemctl enable docker
+chmod +x kubectl &>> "$LOGFILE"
+VALIDATE $? "Made kubectl executable"
 
-VALIDATE $? "Enabled docker"
+mv kubectl /usr/local/bin/kubectl &>> "$LOGFILE"
+VALIDATE $? "Moved kubectl to /usr/local/bin"
 
-usermod -aG docker centos
+# Install eksctl
+curl -sLO "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$PLATFORM.tar.gz" &>> "$LOGFILE"
+VALIDATE $? "Downloaded eksctl"
 
-VALIDATE $? "added centos user to docker group"
+tar -xzf eksctl_$PLATFORM.tar.gz -C /tmp &>> "$LOGFILE"
+VALIDATE $? "Extracted eksctl archive"
 
-echo -e "$R Logout and login again $N"
+rm eksctl_$PLATFORM.tar.gz &>> "$LOGFILE"
 
-curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+mv /tmp/eksctl /usr/local/bin &>> "$LOGFILE"
+VALIDATE $? "Moved eksctl to /usr/local/bin"
 
-chmod +x kubectl
-
-mv kubectl /usr/local/bin/kubectl
-
-VALIDATE $? "kubectl installation"
-
-curl -sLO "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$PLATFORM.tar.gz"
-
-tar -xzf eksctl_$PLATFORM.tar.gz -C /tmp && rm eksctl_$PLATFORM.tar.gz
-
-sudo mv /tmp/eksctl /usr/local/bin
+echo -e "$G Script execution completed successfully $N"
