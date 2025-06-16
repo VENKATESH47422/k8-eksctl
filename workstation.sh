@@ -1,3 +1,4 @@
+
 #!/bin/bash
 
 ID=$(id -u)
@@ -64,7 +65,7 @@ chmod +x kubectl
 
 mv kubectl /usr/local/bin/kubectl
 
-VALIDATE $? "kubectl installation"
+VALIDATE $? "Kubectl installation"
 
 curl -sLO "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$PLATFORM.tar.gz"
 
