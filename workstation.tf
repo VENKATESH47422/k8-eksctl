@@ -20,13 +20,13 @@ data "aws_ami" "centos8" {
 }
 
 # SECURITY GROUP: Allow all inbound and outbound (for lab/demo)
-# resource "aws_security_group" "allow_eksctl" {
-#   name        = "allow_eksctl"
-#   description = "Security group for EKS workstation"
-#   vpc_id      = "vpc-xxxxxxxx"  # 🔴 RECOMMENDED: Add this for clarity and to avoid ambiguity
-#   tags = {
-#     Name = "allow_eksctl"
-#   }
+resource "aws_security_group" "allow_eksctl" {
+  name        = "allow_eksctl"
+  description = "Security group for EKS workstation"
+  vpc_id      = "vpc-0029a537668fbfcd4"  # 🔴 RECOMMENDED: Add this for clarity and to avoid ambiguity
+  tags = {
+    Name = "allow_eksctl"
+  }
 
   ingress {
     description = "Allow all inbound traffic"
